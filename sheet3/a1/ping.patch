@@ -1,0 +1,31 @@
+diff '--color=auto' -Nur old/ping.py new/ping.py
+--- old/ping.py	2018-12-03 13:49:31.941341400 -0200
++++ new/ping.py	2018-12-03 13:51:05.789405617 -0200
+@@ -5,7 +5,7 @@
+ "  ICMP messages can only be sent from processes running as root.
+ """
+  
+-import os, sys, socket, struct, select, time, string, argparse
++import os, sys, socket, struct, select, time, string, argparse, pwd, prctl
+ ICMP_ECHO_REQUEST = 8
+ parser = argparse.ArgumentParser(description='ping')
+ parser.add_argument('-t','--timeout', type=float, default=2, help= 'timeout in seconds')
+@@ -97,8 +97,17 @@
+ 
+ def verbose_ping(dest_addr, timeout, count, logfile, logmsg):
+     fd = 0
++
+     if (logfile != ""): 
+-        fd = open(logfile, "a")
++        if (not os.access(logfile, os.F_OK)):
++            fd = open(logfile, "a")
++            os.chown(logfile, os.getuid(), os.getgid())
++        elif (os.access(logfile, os.W_OK)):
++            fd = open(logfile, "a")
++        else:
++            print "You do not have permission to write to " + logfile
++            return
++
+     log_it(fd, logmsg); log_it(fd, "\n")
+     x = 0
+     while (x != count):
